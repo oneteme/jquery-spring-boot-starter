@@ -1,11 +1,5 @@
-name: CI/CD
-on:
-  pull_request:
-    branches: main
-    types: [opened, synchronize, reopened]
-  push:
-    branches: main
-    paths-ignore: [ "README.md", "doc/**" ]
+name: tag release
+on: workflow_dispatch
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,12 +14,7 @@ jobs:
     - uses: oneteme/automation-scripts/.github/actions/mvn-scan-project@main
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-    - uses: oneteme/automation-scripts/.github/actions/mvn-project-version@main
-      id: prj_ver
-    outputs:
-      version: ${{ steps.prj_ver.outputs.version }}
   deploy:
-    if: github.ref_name == 'main' && endsWith(needs.build.outputs.version, '-SNAPSHOT') #staging
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -38,18 +27,24 @@ jobs:
         server-username: MAVEN_USERNAME
         server-password: MAVEN_PASSWORD
     - uses: oneteme/automation-scripts/.github/actions/mvn-deploy-project@main
+      with:
+        profile: 'deploy'
       env:
         MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
         MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+        MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} #signer=bc
+        MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+    - uses: oneteme/automation-scripts/.github/actions/mvn-project-version@main
+      id: prj_ver
+    outputs:
+      version: ${{ steps.prj_ver.outputs.version }}
   release:
-    needs:
-    - build
-    - deploy
+    needs: deploy
     runs-on: ubuntu-latest
     steps:
     - uses: oneteme/automation-scripts/.github/actions/github-release-notes@main
       with:
-        version: ${{ needs.build.outputs.version }}
-        draft: true
+        version: ${{ needs.deploy.outputs.version }}
+        draft: endsWith(needs.deploy.outputs.version, '-SNAPSHOT')
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
