@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.github.oneteme</groupId>
 	<artifactId>jquery-spring-boot-starter</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<packaging>jar</packaging>
 	<name>JQuery Spring Boot Starter</name>
 	<description>JQuery Spring Boot Starter</description>
@@ -57,9 +57,8 @@
 		<dependency>
 			<groupId>io.github.oneteme</groupId>
 			<artifactId>jquery</artifactId>
-			<version>5.0.0-SNAPSHOT</version>
+			<version>5.0.0</version>
 		</dependency>
-		
 	</dependencies>
 	<build>
 		<plugins>
